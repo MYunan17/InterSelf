@@ -9,7 +9,7 @@ Gamified self-improvement web app: turn daily habits, tasks, and goals into a ga
 - **Boss battles and PvP**: bosses take damage from completed tasks and from energy strikes; friends can challenge each other.
 - **Energy and gems**: energy regenerates 1 per hour, gems come from achievements, bosses, weekly challenges and 7-day streaks.
 - **Friends and leaderboard**: friend requests and rankings.
-- **Auth**: email/password and Google sign-in, JWT session cookie.
+- **Auth**: email/password, JWT session cookie, plus one-click demo accounts (no sign-up needed).
 - **Onboarding and classes**: guided first run and class passives.
 - **Share**: shareable achievement cards (html2canvas export).
 
@@ -40,7 +40,7 @@ Open http://localhost:3000.
 |----------|-------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `AUTH_SECRET` | Random string, at least 32 characters in production |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional, enables Google sign-in |
+| `DEMO_LOGIN_ENABLED` | Optional, `false` hides/disables the one-click demo (default on) |
 | `APP_UTC_OFFSET_HOURS` | Optional, timezone used for "today" (default `7`, WIB) |
 
 ## Game rules
@@ -74,3 +74,14 @@ Open http://localhost:3000.
 
 - Login and register are rate limited in memory per server instance. On serverless hosting, use a shared store (for example Upstash Redis) for a hard global limit.
 - Sessions are stateless JWTs and cannot be revoked individually before they expire (7 days).
+
+## Demo mode and deploying to Vercel
+
+The login page has a **Coba Demo** button. Each click creates an isolated sandbox account (level 3, a 3 day streak, a few items) and signs the visitor in, so nobody can break anyone else's progress. Demo accounts older than 24 hours are deleted automatically.
+
+To host it (for example behind a portfolio link):
+
+1. Create a hosted PostgreSQL database (Neon, Supabase, or Vercel Postgres) and copy its connection string. Prefer the pooled/serverless URL.
+2. In Vercel, import this repository and set `DATABASE_URL` and `AUTH_SECRET` (32+ random characters). Vercel runs `vercel-build`, which applies migrations before building.
+3. Seed the game content once from your machine: `DATABASE_URL="<production url>" npx prisma db seed`.
+4. Open `/login` and press **Coba Demo**.

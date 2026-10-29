@@ -10,6 +10,7 @@ import { GameError } from "@/lib/errors";
 import { GEMS_REWARDS } from "@/lib/gems";
 import { grantRewards } from "@/lib/rewards";
 import { ensureInventoryCapacity } from "@/lib/inventory";
+import { DAY_MS } from "@/lib/time";
 
 const now = () => new Date();
 
@@ -64,12 +65,51 @@ function matchesTask(required: RequiredTask[], taskTitle: string) {
   return required.some((task) => task.title === normalized);
 }
 
+const WEEK_MS = 7 * DAY_MS;
+
+/**
+ * Weekly challenges are seeded once with fixed dates, so without this they would expire a week
+ * later and the panel would stay empty forever. Expired challenges move forward by whole weeks
+ * (keeping their weekday cadence) and everyone's progress on them starts over; challenges whose
+ * window has opened but are still marked UPCOMING become ACTIVE.
+ */
+export async function rollWeeklyChallenges(
+  client: Prisma.TransactionClient | typeof prisma,
+  at: Date = now()
+) {
+  const expired = await client.weeklyChallenge.findMany({
+    where: { endDate: { lt: at } },
+    select: { id: true, startDate: true },
+  });
+
+  for (const challenge of expired) {
+    const weeksBehind = Math.max(1, Math.floor((at.getTime() - challenge.startDate.getTime()) / WEEK_MS));
+    const startDate = new Date(challenge.startDate.getTime() + weeksBehind * WEEK_MS);
+    const endDate = new Date(startDate.getTime() + WEEK_MS);
+
+    // The endDate condition makes this safe if two requests roll the same challenge at once.
+    const moved = await client.weeklyChallenge.updateMany({
+      where: { id: challenge.id, endDate: { lt: at } },
+      data: { startDate, endDate, status: ChallengeStatus.ACTIVE },
+    });
+    if (moved.count > 0) {
+      await client.userChallengeProgress.deleteMany({ where: { challengeId: challenge.id } });
+    }
+  }
+
+  await client.weeklyChallenge.updateMany({
+    where: { status: ChallengeStatus.UPCOMING, startDate: { lte: at }, endDate: { gte: at } },
+    data: { status: ChallengeStatus.ACTIVE },
+  });
+}
+
 export async function recordWeeklyChallengeProgress(
   tx: Prisma.TransactionClient,
   userId: string,
   taskTitle: string
 ) {
   const today = now();
+  await rollWeeklyChallenges(tx, today);
   const challenges = await tx.weeklyChallenge.findMany({
     where: {
       status: ChallengeStatus.ACTIVE,
@@ -139,6 +179,7 @@ export async function recordWeeklyChallengeProgress(
 
 export async function getWeeklyChallengesForUser(userId: string): Promise<ChallengeSummary[]> {
   const today = now();
+  await rollWeeklyChallenges(prisma, today);
   const challenges = await prisma.weeklyChallenge.findMany({
     where: {
       endDate: { gte: today },

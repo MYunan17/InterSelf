@@ -161,7 +161,7 @@ export function LandingHero() {
           position: relative;
           z-index: 1;
           display: grid;
-          grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+          grid-template-columns: minmax(0, 1fr) minmax(460px, 1fr);
           gap: 64px;
           align-items: center;
         }
@@ -191,9 +191,9 @@ export function LandingHero() {
 
         .landing-hero h1 {
           margin: 0;
-          max-width: 580px;
+          max-width: 820px;
           color: #fff;
-          font-size: 54px;
+          font-size: clamp(46px, 3.6vw, 72px);
           font-weight: 900;
           line-height: 1.08;
           letter-spacing: 0;

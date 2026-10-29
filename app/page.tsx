@@ -26,7 +26,7 @@ export default function Home() {
 
         .landing-shell {
           position: relative;
-          width: min(1180px, calc(100% - 48px));
+          width: min(1760px, calc(100% - clamp(32px, 5vw, 120px)));
           margin: 0 auto;
           padding: 30px 0 56px;
         }
@@ -46,7 +46,7 @@ export default function Home() {
 
         @media (max-width: 640px) {
           .landing-shell {
-            width: min(100% - 28px, 1180px);
+            width: calc(100% - 28px);
             padding-top: 20px;
           }
         }

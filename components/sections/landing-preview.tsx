@@ -1,5 +1,9 @@
-import { BarChart3, RefreshCw, Shield, Swords } from "lucide-react";
+"use client";
+
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { BarChart3, Play, RefreshCw, Shield, Swords } from "lucide-react";
+import { Reveal } from "@/components/motion/reveal";
 
 const LOOP_STEPS = [
   {
@@ -33,48 +37,86 @@ const LOOP_STEPS = [
 ];
 
 export function LandingPreview() {
+  const reduce = useReducedMotion();
+
   return (
     <section className="landing-preview">
-      <div className="loop-heading">
-        <div className="loop-eyebrow">
-          <span />
-          Core Loop
+      <Reveal>
+        <div className="loop-heading">
+          <div className="loop-eyebrow">
+            <span />
+            Core Loop
+          </div>
+          <h2>Empat langkah. Satu siklus.</h2>
+          <p>Setiap hari adalah chapter baru dalam perjalanan pengembangan dirimu.</p>
         </div>
-        <h2>Empat langkah. Satu siklus.</h2>
-        <p>Setiap hari adalah chapter baru dalam perjalanan pengembangan dirimu.</p>
+      </Reveal>
+
+      <div className="steps-wrap">
+        <motion.div
+          className="steps-line"
+          aria-hidden
+          initial={reduce ? false : { scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true, margin: "-120px" }}
+          transition={{ duration: 1.6, ease: "easeInOut" }}
+        />
+
+        <div className="steps-grid">
+          {LOOP_STEPS.map(({ num, icon: Icon, title, desc, tone }, index) => (
+            <motion.article
+              key={num}
+              className={`step-card ${tone}`}
+              initial={reduce ? false : { opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6, delay: index * 0.18, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={reduce ? undefined : { y: -8 }}
+            >
+              <motion.p
+                initial={reduce ? false : { scale: 0.4, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 240, damping: 14, delay: 0.25 + index * 0.18 }}
+              >
+                {num}
+              </motion.p>
+              <div className="step-main">
+                <div className="step-icon">
+                  <Icon aria-hidden />
+                </div>
+                <div>
+                  <h3>{title}</h3>
+                  <span>{desc}</span>
+                </div>
+              </div>
+            </motion.article>
+          ))}
+        </div>
       </div>
 
-      <div className="steps-grid">
-        {LOOP_STEPS.map(({ num, icon: Icon, title, desc, tone }, index) => (
-          <article key={num} className={`step-card ${tone}`}>
-            <p>{num}</p>
-            <div className="step-main">
-              <div className="step-icon">
-                <Icon aria-hidden />
-              </div>
-              <div>
-                <h3>{title}</h3>
-                <span>{desc}</span>
-              </div>
-            </div>
-            {index < LOOP_STEPS.length - 1 && <b aria-hidden>›</b>}
-          </article>
-        ))}
-      </div>
-
-      <div className="final-cta">
-        <div className="cta-sigil left" />
-        <div className="cta-sigil right" />
-        <p>Siap Memulai?</p>
-        <h2>
-          Mulai sekarang. <strong>Gratis.</strong>
-        </h2>
-        <span>Tidak perlu kartu kredit. Pilih kelas karakter dan bangun sistem hidupmu sendiri.</span>
-        <Link href="/register">Pilih Kelasmu <em aria-hidden>{"->"}</em></Link>
-        <small>
-          Sudah punya akun? <Link href="/login">Masuk di sini</Link>
-        </small>
-      </div>
+      <Reveal y={40} scale={0.97}>
+        <div className="final-cta">
+          <div className="cta-sigil left" />
+          <div className="cta-sigil right" />
+          <p>Siap Memulai?</p>
+          <h2>
+            Mulai sekarang. <strong>Gratis.</strong>
+          </h2>
+          <span>Tidak perlu kartu kredit. Pilih kelas karakter dan bangun sistem hidupmu sendiri.</span>
+          <div className="cta-actions">
+            <Link href="/register" className="cta-main">
+              Pilih Kelasmu <em aria-hidden>{"->"}</em>
+            </Link>
+            <Link href="/login" className="cta-demo">
+              <Play aria-hidden /> Coba Demo
+            </Link>
+          </div>
+          <small>
+            Sudah punya akun? <Link href="/login">Masuk di sini</Link>
+          </small>
+        </div>
+      </Reveal>
 
       <style>{`
         .landing-preview {
@@ -83,10 +125,7 @@ export function LandingPreview() {
           padding-bottom: 28px;
         }
 
-        .loop-heading {
-          max-width: 520px;
-          margin-bottom: 24px;
-        }
+        .loop-heading { max-width: 520px; margin-bottom: 34px; }
 
         .loop-eyebrow {
           display: flex;
@@ -108,272 +147,229 @@ export function LandingPreview() {
           box-shadow: 0 0 14px rgba(45, 212, 191, 0.7);
         }
 
-        .loop-heading h2 {
-          margin: 0;
-          color: #fff;
-          font-size: 30px;
-          font-weight: 900;
-          line-height: 1.15;
-        }
+        .loop-heading h2 { margin: 0; color: #fff; font-size: 38px; font-weight: 900; line-height: 1.12; }
+        .loop-heading p { margin: 12px 0 0; color: rgba(203, 213, 225, 0.62); font-size: 16px; line-height: 1.7; }
 
-        .loop-heading p {
-          margin: 8px 0 0;
-          color: rgba(226, 232, 240, 0.64);
-          font-size: 14px;
-          line-height: 1.65;
+        .steps-wrap { position: relative; padding-top: 22px; }
+
+        .steps-line {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          transform-origin: 0 50%;
+          background: linear-gradient(90deg, #8b5cf6, #f472b6, #2dd4bf, #8b5cf6);
+          box-shadow: 0 0 16px rgba(139, 92, 246, 0.7);
         }
 
         .steps-grid {
+          position: relative;
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 22px;
-          margin-bottom: 38px;
+          gap: 18px;
         }
 
         .step-card {
+          --accent: 168, 85, 247;
           position: relative;
-          min-height: 142px;
-          border: 1px solid rgba(139, 92, 246, 0.42);
-          border-radius: 10px;
-          background: linear-gradient(135deg, rgba(15, 23, 42, 0.78), rgba(3, 7, 18, 0.7));
-          padding: 20px;
-          box-shadow: inset 0 0 24px rgba(124, 58, 237, 0.08);
+          border: 1px solid rgba(var(--accent), 0.34);
+          border-radius: 18px;
+          background: linear-gradient(150deg, rgba(15, 23, 42, 0.92), rgba(8, 10, 26, 0.94));
+          padding: 22px;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .step-card.rose {
-          border-color: rgba(244, 114, 182, 0.48);
+        .step-card.rose { --accent: 244, 114, 182; }
+        .step-card.teal { --accent: 45, 212, 191; }
+
+        .step-card:hover {
+          border-color: rgba(var(--accent), 0.9);
+          box-shadow: 0 18px 46px rgba(var(--accent), 0.2);
         }
 
-        .step-card.teal {
-          border-color: rgba(45, 212, 191, 0.46);
-        }
-
-        .step-card p {
-          margin: 0 0 16px;
-          color: #c084fc;
+        .step-card > p {
+          margin: 0 0 18px;
+          color: transparent;
           font-family: var(--font-mono);
-          font-size: 13px;
+          font-size: 40px;
           font-weight: 900;
+          line-height: 1;
+          -webkit-text-stroke: 1px rgba(var(--accent), 0.8);
         }
 
-        .step-card.rose p {
-          color: #fb7185;
-        }
-
-        .step-card.teal p {
-          color: #2dd4bf;
-        }
-
-        .step-main {
-          display: grid;
-          grid-template-columns: 48px 1fr;
-          gap: 14px;
-          align-items: start;
-        }
+        .step-main { display: grid; gap: 14px; }
 
         .step-icon {
           display: grid;
-          width: 44px;
-          height: 44px;
+          width: 46px;
+          height: 46px;
           place-items: center;
-          border: 1px solid rgba(168, 85, 247, 0.72);
+          border: 1px solid rgba(var(--accent), 0.5);
           border-radius: 13px;
-          color: #c084fc;
-          background: rgba(88, 28, 135, 0.22);
-          transform: rotate(45deg);
+          background: rgba(var(--accent), 0.1);
+          color: rgb(var(--accent));
+          box-shadow: 0 0 20px rgba(var(--accent), 0.22);
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .step-card.rose .step-icon {
-          border-color: rgba(244, 114, 182, 0.72);
-          color: #fb7185;
-          background: rgba(244, 63, 94, 0.12);
-        }
+        .step-icon svg { width: 22px; height: 22px; }
+        .step-card:hover .step-icon { transform: rotate(10deg) scale(1.15); }
 
-        .step-card.teal .step-icon {
-          border-color: rgba(45, 212, 191, 0.72);
-          color: #2dd4bf;
-          background: rgba(20, 184, 166, 0.12);
-        }
+        .step-card h3 { margin: 0; color: #fff; font-size: 18px; font-weight: 800; }
+        .step-card span { display: block; margin-top: 6px; color: rgba(203, 213, 225, 0.64); font-size: 13.5px; line-height: 1.65; }
 
-        .step-icon svg {
-          width: 22px;
-          height: 22px;
-          transform: rotate(-45deg);
-        }
-
-        .step-card h3 {
-          margin: 0;
-          color: #fff;
-          font-size: 15px;
-          font-weight: 900;
-        }
-
-        .step-card span {
-          display: block;
-          margin-top: 8px;
-          color: rgba(203, 213, 225, 0.58);
-          font-size: 12px;
-          line-height: 1.65;
-        }
-
-        .step-card b {
-          position: absolute;
-          right: -17px;
-          top: 50%;
-          color: #8b5cf6;
-          font-size: 24px;
-          transform: translateY(-50%);
-          text-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
-        }
-
+        /* ---------- final CTA ---------- */
         .final-cta {
           position: relative;
+          isolation: isolate;
+          margin-top: 64px;
           overflow: hidden;
-          border: 1px solid rgba(139, 92, 246, 0.82);
-          border-radius: 24px;
-          background:
-            radial-gradient(circle at 18% 52%, rgba(124, 58, 237, 0.24), transparent 22%),
-            radial-gradient(circle at 82% 52%, rgba(124, 58, 237, 0.24), transparent 22%),
-            linear-gradient(135deg, rgba(30, 27, 75, 0.72), rgba(3, 7, 18, 0.84));
-          padding: 50px 24px;
+          border-radius: 26px;
+          padding: 64px 28px 54px;
           text-align: center;
-          box-shadow:
-            0 0 36px rgba(124, 58, 237, 0.28),
-            inset 0 0 40px rgba(124, 58, 237, 0.12);
         }
 
         .final-cta::before {
           content: "";
           position: absolute;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(139, 92, 246, 0.12) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(139, 92, 246, 0.12) 1px, transparent 1px);
-          background-size: 44px 44px;
-          opacity: 0.24;
+          z-index: -2;
+          left: 50%;
+          top: 50%;
+          width: 160%;
+          aspect-ratio: 1;
+          translate: -50% -50%;
+          background: conic-gradient(from 0deg, #8b5cf6, #2dd4bf, #facc15, #f472b6, #8b5cf6);
+          animation: spin 9s linear infinite;
+        }
+
+        .final-cta::after {
+          content: "";
+          position: absolute;
+          z-index: -1;
+          inset: 2px;
+          border-radius: 24px;
+          background:
+            radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.34), transparent 55%),
+            linear-gradient(180deg, #0b0a22, #05060f);
         }
 
         .cta-sigil {
           position: absolute;
           top: 50%;
-          width: 58px;
-          height: 58px;
-          border: 1px solid #8b5cf6;
-          border-radius: 16px;
-          background: radial-gradient(circle, rgba(139, 92, 246, 0.42), rgba(3, 7, 18, 0.12));
-          box-shadow: 0 0 26px rgba(139, 92, 246, 0.7);
-          transform: translateY(-50%) rotate(45deg);
+          width: 240px;
+          height: 240px;
+          border: 1px dashed rgba(167, 139, 250, 0.35);
+          border-radius: 50%;
+          translate: 0 -50%;
+          animation: spin 28s linear infinite;
         }
 
-        .cta-sigil.left {
-          left: 20%;
+        .cta-sigil::after {
+          content: "";
+          position: absolute;
+          inset: 28px;
+          border: 1px solid rgba(45, 212, 191, 0.3);
+          border-radius: 50%;
+          animation: spin 18s linear infinite reverse;
         }
 
-        .cta-sigil.right {
-          right: 20%;
-        }
+        .cta-sigil.left { left: -110px; }
+        .cta-sigil.right { right: -110px; animation-direction: reverse; }
 
-        .final-cta p,
-        .final-cta h2,
-        .final-cta span,
-        .final-cta a,
-        .final-cta small {
-          position: relative;
-          z-index: 1;
-        }
-
-        .final-cta p {
-          margin: 0 0 12px;
-          color: #c084fc;
+        .final-cta > p {
+          margin: 0;
+          color: #facc15;
           font-family: var(--font-mono);
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 900;
-          letter-spacing: 0.34em;
+          letter-spacing: 0.3em;
           text-transform: uppercase;
         }
 
-        .final-cta h2 {
-          margin: 0;
-          color: #fff;
-          font-size: 34px;
-          font-weight: 900;
-          line-height: 1.15;
-        }
-
+        .final-cta h2 { margin: 14px 0 0; color: #fff; font-size: 44px; font-weight: 900; line-height: 1.1; }
         .final-cta h2 strong {
-          color: #facc15;
-          font: inherit;
+          background: linear-gradient(100deg, #f6c448 20%, #fff3b0 45%, #f6c448 70%);
+          background-size: 220% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: gold-flow 4.5s linear infinite;
         }
 
         .final-cta > span {
           display: block;
-          max-width: 500px;
-          margin: 12px auto 0;
-          color: rgba(226, 232, 240, 0.68);
-          font-size: 15px;
+          max-width: 520px;
+          margin: 16px auto 0;
+          color: rgba(203, 213, 225, 0.7);
+          font-size: 15.5px;
           line-height: 1.7;
         }
 
-        .final-cta > a {
+        .cta-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 30px; }
+
+        .cta-main,
+        .cta-demo {
+          position: relative;
           display: inline-flex;
-          min-width: 250px;
           min-height: 52px;
           align-items: center;
           justify-content: center;
-          margin-top: 24px;
-          border: 1px solid rgba(255, 226, 122, 0.88);
-          border-radius: 10px;
-          background: linear-gradient(180deg, #ffe178, #d99b1d);
-          box-shadow: 0 0 24px rgba(250, 204, 21, 0.34);
-          color: #1d1302;
-          font-size: 16px;
-          font-weight: 900;
+          gap: 8px;
+          overflow: hidden;
+          border-radius: 11px;
+          padding: 0 30px;
           text-decoration: none;
-        }
-
-        .final-cta em {
-          margin-left: 8px;
-          font-style: normal;
-        }
-
-        .final-cta small {
-          display: block;
-          margin-top: 14px;
-          color: rgba(203, 213, 225, 0.62);
-          font-size: 13px;
-        }
-
-        .final-cta small a {
-          color: #c084fc;
+          font-size: 15px;
           font-weight: 800;
-          text-decoration: none;
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
-        @media (max-width: 980px) {
-          .steps-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .step-card b {
-            display: none;
-          }
+        .cta-main {
+          border: 1px solid rgba(255, 226, 122, 0.88);
+          background: linear-gradient(180deg, #ffe178, #d99b1d);
+          color: #1d1302;
+          animation: cta-pulse 2.6s ease-in-out infinite;
         }
 
-        @media (max-width: 620px) {
-          .steps-grid {
-            grid-template-columns: 1fr;
-          }
+        .cta-main em { display: inline-block; font-style: normal; transition: transform 0.25s ease; }
+        .cta-main:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 40px rgba(250, 204, 21, 0.55); }
+        .cta-main:hover em { transform: translateX(6px); }
 
-          .cta-sigil {
-            display: none;
-          }
+        .cta-demo {
+          border: 1px solid rgba(139, 92, 246, 0.8);
+          background: rgba(12, 10, 28, 0.7);
+          color: #d8b4fe;
+        }
 
-          .final-cta {
-            padding: 38px 18px;
-          }
+        .cta-demo svg { width: 15px; height: 15px; }
+        .cta-demo:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(124, 58, 237, 0.45); }
 
-          .final-cta h2 {
-            font-size: 28px;
+        .final-cta small { display: block; margin-top: 22px; color: rgba(148, 163, 184, 0.7); font-size: 13px; }
+        .final-cta small a { color: #2dd4bf; text-decoration: none; }
+        .final-cta small a:hover { text-decoration: underline; }
+
+        @keyframes spin { to { rotate: 360deg; } }
+        @keyframes gold-flow { to { background-position: -220% 0; } }
+        @keyframes cta-pulse { 0%, 100% { box-shadow: 0 0 22px rgba(250, 204, 21, 0.32); } 50% { box-shadow: 0 0 44px rgba(250, 204, 21, 0.6); } }
+
+        @media (max-width: 960px) {
+          .steps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .steps-line { display: none; }
+        }
+
+        @media (max-width: 640px) {
+          .steps-grid { grid-template-columns: minmax(0, 1fr); }
+          .loop-heading h2 { font-size: 30px; }
+          .final-cta { padding: 46px 20px 40px; }
+          .final-cta h2 { font-size: 30px; }
+          .cta-sigil { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .landing-preview *, .landing-preview *::before, .landing-preview *::after {
+            animation: none !important;
+            transition: none !important;
           }
         }
       `}</style>

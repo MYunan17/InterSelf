@@ -1,4 +1,9 @@
+"use client";
+
+import type { MouseEvent } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Flame, Gift, Swords, Trophy, UserRound, Zap } from "lucide-react";
+import { Reveal } from "@/components/motion/reveal";
 
 type Feature = {
   icon: typeof Swords;
@@ -54,22 +59,46 @@ const FEATURES: Feature[] = [
 ];
 
 export function LandingFeatures() {
+  const reduce = useReducedMotion();
+
+  // The glow under each card follows the cursor.
+  function trackPointer(event: MouseEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+    event.currentTarget.style.setProperty("--my", `${event.clientY - rect.top}px`);
+  }
+
   return (
     <section className="landing-features">
-      <div className="section-divider">
-        <span />
-        <p>System Online</p>
-        <span />
-      </div>
+      <Reveal>
+        <div className="section-divider">
+          <span />
+          <p>System Online</p>
+          <span />
+        </div>
+      </Reveal>
 
-      <div className="features-heading">
-        <h2>Bukan productivity app biasa.</h2>
-        <p>Setiap ritual harian punya bobot dalam dunia game yang hidup.</p>
-      </div>
+      <Reveal delay={0.1}>
+        <div className="features-heading">
+          <h2>
+            Bukan productivity app <em>biasa.</em>
+          </h2>
+          <p>Setiap ritual harian punya bobot dalam dunia game yang hidup.</p>
+        </div>
+      </Reveal>
 
       <div className="features-grid">
-        {FEATURES.map(({ icon: Icon, title, desc, tag, tone }) => (
-          <article key={title} className={`feature-card ${tone}`}>
+        {FEATURES.map(({ icon: Icon, title, desc, tag, tone }, index) => (
+          <motion.article
+            key={title}
+            className={`feature-card ${tone}`}
+            onMouseMove={trackPointer}
+            initial={reduce ? false : { opacity: 0, y: 36, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.6, delay: (index % 3) * 0.12, ease: [0.22, 1, 0.36, 1] }}
+            whileHover={reduce ? undefined : { y: -8 }}
+          >
             <div className="feature-icon">
               <Icon aria-hidden />
             </div>
@@ -78,7 +107,7 @@ export function LandingFeatures() {
               <p>{desc}</p>
             </div>
             <strong>{tag}</strong>
-          </article>
+          </motion.article>
         ))}
       </div>
 
@@ -86,7 +115,7 @@ export function LandingFeatures() {
         .landing-features {
           position: relative;
           z-index: 1;
-          padding: 0 0 54px;
+          padding: 24px 0 70px;
         }
 
         .section-divider {
@@ -94,205 +123,162 @@ export function LandingFeatures() {
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           gap: 18px;
-          margin-bottom: 20px;
+          margin-bottom: 26px;
         }
 
         .section-divider span {
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.74), transparent);
+          background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.7), transparent);
         }
 
         .section-divider p {
           margin: 0;
-          color: #a855f7;
+          color: #a78bfa;
           font-family: var(--font-mono);
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 900;
           letter-spacing: 0.34em;
           text-transform: uppercase;
         }
 
-        .features-heading {
-          margin: 0 auto 28px;
-          max-width: 680px;
-          text-align: center;
+        .section-divider p::before {
+          content: "";
+          display: inline-block;
+          width: 7px;
+          height: 7px;
+          margin-right: 12px;
+          border-radius: 50%;
+          background: #2dd4bf;
+          box-shadow: 0 0 12px #2dd4bf;
+          animation: blink 1.6s ease-in-out infinite;
         }
+
+        .features-heading { margin-bottom: 38px; text-align: center; }
 
         .features-heading h2 {
           margin: 0;
           color: #fff;
-          font-size: 32px;
+          font-size: 40px;
           font-weight: 900;
-          letter-spacing: 0;
           line-height: 1.12;
         }
 
+        .features-heading h2 em {
+          font-style: normal;
+          background: linear-gradient(100deg, #a855f7, #2dd4bf, #facc15, #a855f7);
+          background-size: 250% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: flow 6s linear infinite;
+        }
+
         .features-heading p {
-          margin: 10px 0 0;
-          color: rgba(226, 232, 240, 0.64);
-          font-size: 15px;
+          margin: 12px 0 0;
+          color: rgba(203, 213, 225, 0.62);
+          font-size: 16px;
         }
 
         .features-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 20px;
+          gap: 18px;
         }
 
         .feature-card {
+          --accent: 168, 85, 247;
+          --mx: 50%;
+          --my: 0%;
           position: relative;
-          display: grid;
-          grid-template-columns: 64px 1fr;
-          gap: 18px 20px;
-          min-height: 168px;
+          display: flex;
+          min-height: 238px;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 18px;
           overflow: hidden;
-          border: 1px solid rgba(139, 92, 246, 0.35);
-          border-radius: 15px;
-          background:
-            linear-gradient(135deg, rgba(15, 23, 42, 0.86), rgba(3, 7, 18, 0.76)),
-            rgba(3, 7, 18, 0.88);
+          border: 1px solid rgba(var(--accent), 0.3);
+          border-radius: 18px;
+          background: linear-gradient(150deg, rgba(15, 23, 42, 0.86), rgba(8, 10, 26, 0.9));
           padding: 26px;
-          box-shadow: inset 0 0 28px rgba(124, 58, 237, 0.08);
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
+
+        .feature-card.gold { --accent: 250, 204, 21; }
+        .feature-card.rose { --accent: 244, 114, 182; }
+        .feature-card.teal { --accent: 45, 212, 191; }
 
         .feature-card::before {
           content: "";
           position: absolute;
           inset: 0;
-          border-radius: inherit;
-          opacity: 0.26;
+          opacity: 0;
+          background: radial-gradient(260px circle at var(--mx) var(--my), rgba(var(--accent), 0.2), transparent 60%);
+          transition: opacity 0.3s ease;
           pointer-events: none;
         }
 
-        .feature-card.gold {
-          border-color: rgba(250, 204, 21, 0.56);
+        .feature-card:hover {
+          border-color: rgba(var(--accent), 0.85);
+          box-shadow: 0 18px 50px rgba(var(--accent), 0.18);
         }
 
-        .feature-card.gold::before {
-          background: radial-gradient(circle at 0% 0%, rgba(250, 204, 21, 0.28), transparent 44%);
-        }
-
-        .feature-card.violet {
-          border-color: rgba(139, 92, 246, 0.68);
-        }
-
-        .feature-card.violet::before {
-          background: radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.38), transparent 44%);
-        }
-
-        .feature-card.rose {
-          border-color: rgba(244, 114, 182, 0.58);
-        }
-
-        .feature-card.rose::before {
-          background: radial-gradient(circle at 0% 0%, rgba(244, 114, 182, 0.26), transparent 44%);
-        }
-
-        .feature-card.teal {
-          border-color: rgba(45, 212, 191, 0.58);
-        }
-
-        .feature-card.teal::before {
-          background: radial-gradient(circle at 0% 0%, rgba(45, 212, 191, 0.24), transparent 44%);
-        }
+        .feature-card:hover::before { opacity: 1; }
 
         .feature-icon {
           position: relative;
-          z-index: 1;
           display: grid;
-          width: 58px;
-          height: 58px;
+          width: 52px;
+          height: 52px;
           place-items: center;
-          color: #fff;
+          border: 1px solid rgba(var(--accent), 0.5);
+          border-radius: 14px;
+          background: rgba(var(--accent), 0.1);
+          color: rgb(var(--accent));
+          box-shadow: 0 0 22px rgba(var(--accent), 0.22);
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .feature-icon svg {
-          width: 44px;
-          height: 44px;
-          filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.72));
-        }
+        .feature-icon svg { width: 25px; height: 25px; }
+        .feature-card:hover .feature-icon { transform: rotate(-8deg) scale(1.14); }
 
-        .feature-card.gold .feature-icon svg {
-          color: #facc15;
-          filter: drop-shadow(0 0 16px rgba(250, 204, 21, 0.72));
-        }
-
-        .feature-card.violet .feature-icon svg {
-          color: #a78bfa;
-        }
-
-        .feature-card.rose .feature-icon svg {
-          color: #fb7185;
-          filter: drop-shadow(0 0 16px rgba(251, 113, 133, 0.72));
-        }
-
-        .feature-card.teal .feature-icon svg {
-          color: #2dd4bf;
-          filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.72));
-        }
-
-        .feature-card h3 {
-          position: relative;
-          z-index: 1;
-          margin: 0;
-          color: #fff;
-          font-size: 18px;
-          font-weight: 900;
-          line-height: 1.2;
-        }
+        .feature-card h3 { margin: 0; color: #fff; font-size: 19px; font-weight: 800; }
 
         .feature-card p {
-          position: relative;
-          z-index: 1;
-          margin: 12px 0 0;
-          color: rgba(203, 213, 225, 0.62);
-          font-size: 13px;
-          line-height: 1.75;
+          margin: 8px 0 0;
+          color: rgba(203, 213, 225, 0.66);
+          font-size: 14px;
+          line-height: 1.7;
         }
 
         .feature-card strong {
-          position: relative;
-          z-index: 1;
-          grid-column: 1 / -1;
-          align-self: end;
-          color: #facc15;
+          align-self: flex-start;
+          border: 1px solid rgba(var(--accent), 0.4);
+          border-radius: 999px;
+          padding: 4px 12px;
+          color: rgb(var(--accent));
           font-family: var(--font-mono);
           font-size: 10px;
-          font-weight: 900;
-          letter-spacing: 0.18em;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
         }
 
-        .feature-card.violet strong {
-          color: #c084fc;
+        @keyframes blink { 50% { opacity: 0.25; } }
+        @keyframes flow { to { background-position: -250% 0; } }
+
+        @media (max-width: 960px) {
+          .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
-        .feature-card.rose strong {
-          color: #fb7185;
+        @media (max-width: 640px) {
+          .features-grid { grid-template-columns: minmax(0, 1fr); }
+          .features-heading h2 { font-size: 30px; }
+          .feature-card { min-height: 0; }
         }
 
-        .feature-card.teal strong {
-          color: #2dd4bf;
-        }
-
-        @media (max-width: 980px) {
-          .features-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 620px) {
-          .features-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .feature-card {
-            grid-template-columns: 52px 1fr;
-            padding: 20px;
-          }
-
-          .features-heading h2 {
-            font-size: 28px;
+        @media (prefers-reduced-motion: reduce) {
+          .landing-features *, .landing-features *::before, .landing-features *::after {
+            animation: none !important;
+            transition: none !important;
           }
         }
       `}</style>

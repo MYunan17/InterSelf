@@ -1,10 +1,12 @@
 import { LandingHero } from "@/components/sections/landing-hero";
 import { LandingFeatures } from "@/components/sections/landing-features";
 import { LandingPreview } from "@/components/sections/landing-preview";
+import { ScrollProgress } from "@/components/motion/scroll-progress";
 
 export default function Home() {
   return (
     <main className="interself-landing">
+      <ScrollProgress />
       <div className="landing-shell">
         <LandingHero />
         <LandingFeatures />

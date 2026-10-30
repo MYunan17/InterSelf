@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { CLASS_COLORS, IroncladSprite, MerchantSprite, PhantomSprite, SageSprite, type SpriteProps } from "@/lib/character-sprites";
 import type { ComponentType } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { preloadDashboardPanel } from "@/components/layout/dashboard-panel-preloader";
 import { fetchCachedJson } from "@/lib/panel-data-cache";
 
@@ -36,6 +37,7 @@ type Props = {
 };
 
 export function DashboardSidebar({ username, level, expIntoLevel, expForNextLevel, characterClass }: Props) {
+  const reduce = useReducedMotion();
   const [activeId, setActiveId] = useState("dashboard");
   const [weeklyRank, setWeeklyRank] = useState<number | null>(null);
 
@@ -86,27 +88,36 @@ export function DashboardSidebar({ username, level, expIntoLevel, expForNextLeve
           const isActive = activeId === item.id;
           const svgPath = ICON_SVG[item.icon] ?? "";
           return (
-            <button key={item.id} type="button" onClick={() => navigate(item)}
+            <motion.button key={item.id} type="button" onClick={() => navigate(item)}
+              whileHover={reduce || isActive ? undefined : { x: 4 }}
+              whileTap={reduce ? undefined : { scale: 0.97 }}
               onFocus={() => item.hash && preloadDashboardPanel(item.hash)}
               onMouseEnter={() => item.hash && preloadDashboardPanel(item.hash)}
               style={{
+                position: "relative",
                 display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 12px", borderRadius: 10, border: "1px solid",
-                borderColor: isActive ? "rgba(139,92,246,0.35)" : "transparent",
-                background: isActive ? "rgba(139,92,246,0.18)" : "transparent",
+                padding: "9px 12px", borderRadius: 10, border: "1px solid transparent",
+                background: "transparent",
                 color: isActive ? "#fff" : "rgba(255,255,255,0.45)",
                 fontSize: 12, fontWeight: 600, cursor: "pointer",
                 textAlign: "left", width: "100%",
               }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              {isActive && (
+                <motion.span
+                  layoutId="sidebar-active-pill"
+                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  style={{ position: "absolute", inset: 0, borderRadius: 10, border: "1px solid rgba(139,92,246,0.4)", background: "rgba(139,92,246,0.18)", boxShadow: "0 0 18px rgba(139,92,246,0.18)" }}
+                />
+              )}
+              <svg style={{ position: "relative" }} width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke={isActive ? "#c4b5fd" : "currentColor"} strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round">
                 {svgPath.split(" M").map((d, i) => (
                   <path key={i} d={i === 0 ? d : "M" + d} />
                 ))}
               </svg>
-              <span>{item.label}</span>
-            </button>
+              <span style={{ position: "relative" }}>{item.label}</span>
+            </motion.button>
           );
         })}
       </div>
@@ -122,13 +133,8 @@ export function DashboardSidebar({ username, level, expIntoLevel, expForNextLeve
               <path d="M8 21h8 M12 17v4 M7 4H4.5a2.5 2.5 0 000 5H7 M17 4h2.5a2.5 2.5 0 010 5H17 M7 4h10v8a5 5 0 01-10 0V4z"/>
             </svg>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>{weeklyRank !== null ? `#${weeklyRank}` : "#1"}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#3aaa7a" }}>Top player this week</div>
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
-              <div style={{ width: 5, height: 20, background: "#3aaa7a", borderRadius: 3 }} />
-              <div style={{ width: 5, height: 14, background: "#1e2535", borderRadius: 3 }} />
-              <div style={{ width: 5, height: 10, background: "#1e2535", borderRadius: 3 }} />
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>{weeklyRank !== null ? `#${weeklyRank}` : "-"}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#3aaa7a" }}>{weeklyRank === 1 ? "Top player minggu ini" : "Peringkat minggu ini"}</div>
             </div>
           </div>
         </div>
@@ -157,7 +163,7 @@ export function DashboardSidebar({ username, level, expIntoLevel, expForNextLeve
             </div>
           </div>
           <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
-            <div style={{ height: "100%", width: `${expPercent}%`, background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`, borderRadius: 3 }} />
+            <motion.div initial={reduce ? false : { width: 0 }} animate={{ width: `${expPercent}%` }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }} style={{ height: "100%", background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`, borderRadius: 3 }} />
           </div>
           <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(255,255,255,0.35)" }}>
             {expIntoLevel.toLocaleString()} / {expForNextLevel.toLocaleString()} EXP

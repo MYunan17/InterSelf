@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateLevelFromTotalExp } from "@/lib/level";
@@ -94,7 +94,15 @@ export default async function DashboardPage() {
   type EquippedRelic = {
     item: { id: number; name: string; rarity: string; description: string } | null;
   };
-  type TaskRecord = { id: number; title: string; createdAt: Date; isSystem: boolean };
+  type TaskRecord = {
+    id: number;
+    title: string;
+    createdAt: Date;
+    isSystem: boolean;
+    expReward: number;
+    coinReward: number;
+    durationMinutes: number | null;
+  };
   type TodayCompletion = { taskId: number };
 
   let profileRecord: ProfileRecord = null;
@@ -113,7 +121,15 @@ export default async function DashboardPage() {
       }),
       prisma.task.findMany({
         where: { OR: [{ isSystem: true }, { createdById: user.id }] },
-        select: { id: true, title: true, createdAt: true, isSystem: true },
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          isSystem: true,
+          expReward: true,
+          coinReward: true,
+          durationMinutes: true,
+        },
         orderBy: [{ isSystem: "desc" }, { createdAt: "desc" }],
       }),
       prisma.taskCompletion.findMany({
@@ -218,12 +234,29 @@ export default async function DashboardPage() {
     completionsByDate[key] = (completionsByDate[key] ?? 0) + 1;
   }
 
-  // Stats for overview (this week)
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const weekCompletions = calendarCompletions.filter((c) => c.completedAt >= oneWeekAgo);
-  const habitsThisWeek = weekCompletions.length;
-  const expThisWeek = habitsThisWeek * 30;
-  const coinsThisWeek = habitsThisWeek * 12;
+  // Stats for overview: real totals for the last 7 days and the 7 days before that
+  const weekStart = new Date(startOfToday().getTime() - 6 * 24 * 60 * 60 * 1000);
+  const previousWeekStart = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekTotals = async (from: Date, until?: Date) => {
+    try {
+      const result = await prisma.taskCompletion.aggregate({
+        where: { userId: user.id, completedAt: until ? { gte: from, lt: until } : { gte: from } },
+        _count: { _all: true },
+        _sum: { expEarned: true, coinsEarned: true },
+      });
+      return {
+        habits: result._count._all,
+        exp: result._sum.expEarned ?? 0,
+        coins: result._sum.coinsEarned ?? 0,
+      };
+    } catch {
+      return { habits: 0, exp: 0, coins: 0 };
+    }
+  };
+  const [thisWeekTotals, lastWeekTotals] = await Promise.all([
+    weekTotals(weekStart),
+    weekTotals(previousWeekStart, weekStart),
+  ]);
 
   return (
     <ClassGate hasChosenClass={hasChosenClass}>
@@ -260,6 +293,8 @@ export default async function DashboardPage() {
               This avoids full page reloads and keeps all data server-fetched.
             */}
             <DashboardContentRouter
+              username={user.profile?.username ?? user.name ?? "Hunter"}
+              streak={streakValue}
               // Main grid panels
               characterCard={
                 <CharacterCard
@@ -274,8 +309,16 @@ export default async function DashboardPage() {
               }
               dailyQuests={
                 <DailyQuestsPanel
-                  tasks={tasks.map((t) => ({ id: t.id, title: t.title, isSystem: t.isSystem }))}
+                  tasks={tasks.map((t) => ({
+                    id: t.id,
+                    title: t.title,
+                    isSystem: t.isSystem,
+                    expReward: t.expReward,
+                    coinReward: t.coinReward,
+                    durationMinutes: t.durationMinutes,
+                  }))}
                   completedTaskIds={completedTaskIds}
+                  streak={streakValue}
                 />
               }
               bossBattlePreview={
@@ -290,10 +333,10 @@ export default async function DashboardPage() {
               weeklyChallenges={<WeeklyChallengesPanel />}
               statsOverview={
                 <StatsOverviewPanel
-                  habitsCompleted={habitsThisWeek}
-                  totalExp={expThisWeek}
-                  coinsEarned={coinsThisWeek}
+                  thisWeek={thisWeekTotals}
+                  lastWeek={lastWeekTotals}
                   streak={streakValue}
+                  bestStreak={bestStreakValue}
                 />
               }
               recentAchievements={<RecentAchievementsPanel />}

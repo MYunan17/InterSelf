@@ -317,7 +317,7 @@ export async function applySpecialItemEffect(
         where: { userId },
         data: { coinBoostUntil: new Date(Date.now() + COIN_MAGNET_DURATION_MS) },
       });
-      return { message: "Coin Magnet aktif 1 jam: coins +50%", applied: true };
+      return { message: "Coin Magnet aktif 1 jam: coins +100%", applied: true };
     }
 
     default:

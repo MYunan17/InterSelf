@@ -3,27 +3,50 @@
 import { useCallback, useEffect, useState } from "react";
 import { subscribeToTasksUpdate } from "@/lib/events";
 import { fetchCachedJson } from "@/lib/panel-data-cache";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 
 // STATS OVERVIEW
 
+type WeekTotals = { habits: number; exp: number; coins: number };
+
 type StatsOverviewPanelProps = {
-  habitsCompleted?: number;
-  totalExp?: number;
-  coinsEarned?: number;
+  thisWeek?: WeekTotals;
+  lastWeek?: WeekTotals;
   streak?: number;
+  bestStreak?: number;
+};
+
+type Tone = "up" | "down" | "flat";
+
+function describeDelta(current: number, previous: number): { text: string; tone: Tone } {
+  if (current === 0 && previous === 0) return { text: "Belum ada aktivitas", tone: "flat" };
+  if (previous === 0) return { text: "Baru minggu ini", tone: "up" };
+  const percent = Math.round(((current - previous) / previous) * 100);
+  if (percent === 0) return { text: "Sama seperti minggu lalu", tone: "flat" };
+  return { text: `${Math.abs(percent)}% vs minggu lalu`, tone: percent > 0 ? "up" : "down" };
+}
+
+const TONE_STYLE: Record<Tone, { color: string; arrow: string }> = {
+  up: { color: "#3aaa7a", arrow: "▲" },
+  down: { color: "#e05a6a", arrow: "▼" },
+  flat: { color: "rgba(255,255,255,0.4)", arrow: "•" },
 };
 
 export function StatsOverviewPanel({
-  habitsCompleted = 0,
-  totalExp = 0,
-  coinsEarned = 0,
+  thisWeek = { habits: 0, exp: 0, coins: 0 },
+  lastWeek = { habits: 0, exp: 0, coins: 0 },
   streak = 0,
+  bestStreak = 0,
 }: StatsOverviewPanelProps) {
-  const stats = [
-    { label: "Habits Completed", value: habitsCompleted, delta: "23% vs last week", dc: "#3aaa7a", up: true },
-    { label: "Total EXP",        value: totalExp.toLocaleString(), delta: "18% vs last week", dc: "#3aaa7a", up: true },
-    { label: "Coins Earned",     value: coinsEarned.toLocaleString(), delta: "15% vs last week", dc: "#f59e0b", up: true },
-    { label: "Streak",           value: streak, delta: "2 days vs last week", dc: "#3aaa7a", up: true },
+  const stats: { label: string; value: number; delta: { text: string; tone: Tone } }[] = [
+    { label: "Habits Completed", value: thisWeek.habits, delta: describeDelta(thisWeek.habits, lastWeek.habits) },
+    { label: "Total EXP", value: thisWeek.exp, delta: describeDelta(thisWeek.exp, lastWeek.exp) },
+    { label: "Coins Earned", value: thisWeek.coins, delta: describeDelta(thisWeek.coins, lastWeek.coins) },
+    {
+      label: "Streak",
+      value: streak,
+      delta: { text: bestStreak > 0 ? `Terbaik ${bestStreak} hari` : "Mulai hari ini", tone: "flat" },
+    },
   ];
 
   return (
@@ -35,18 +58,23 @@ export function StatsOverviewPanel({
           </svg>
           <span>Stats Overview</span>
         </div>
-        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", cursor: "pointer" }}>This Week</span>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)" }}>7 hari terakhir</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, padding: "0 12px 14px" }}>
-        {stats.map((s) => (
-          <div key={s.label} style={{ background: "#111520", borderRadius: 10, padding: "10px 12px" }}>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 3 }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{s.value}</div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: s.dc, marginTop: 3 }}>
-              {s.up ? "▲" : "▼"} {s.delta}
+        {stats.map((s) => {
+          const tone = TONE_STYLE[s.delta.tone];
+          return (
+            <div key={s.label} className="dash-stat-tile" style={{ background: "#111520", borderRadius: 10, padding: "10px 12px" }}>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 3 }}>{s.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", lineHeight: 1 }}>
+                <AnimatedNumber value={s.value} />
+              </div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: tone.color, marginTop: 3 }}>
+                {tone.arrow} {s.delta.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

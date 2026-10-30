@@ -50,7 +50,7 @@ Open http://localhost:3000.
 - **Tasks**: each task can be completed once per day (enforced by a unique index, so double clicks and parallel requests cannot farm EXP).
 - **Energy**: 1 per hour up to the maximum. Boss strikes spend energy on the server.
 - **Boss**: hits have a 60 second cooldown. A defeated boss that comes back around starts with full HP.
-- **Items**: XP Surge (+50% EXP, 2h), Coin Magnet (+50% coins, 1h), Boss Orb (500 damage), Streak Freeze (shield for 3 days).
+- **Items**: XP Surge (+50% EXP, 2h), Coin Magnet (+100% coins, 1h), Boss Orb (500 damage), Streak Freeze (shield for 3 days).
 
 ## Scripts
 

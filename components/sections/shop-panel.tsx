@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fetchCachedJson, getCachedJson, setCachedJson } from "@/lib/panel-data-cache";
+import { emitTasksUpdatedEvent } from "@/lib/events";
 
 type ShopItem = {
   id: number;
@@ -50,6 +51,7 @@ export function ShopPanel({ initialData }: { initialData?: ShopData }) {
     const result = await res.json();
     if (res.ok) {
       setToast({ msg: `${item.name} purchased!`, ok: true });
+      emitTasksUpdatedEvent();
       setData(prev => {
         const next = prev ? {
         userCoins: result.remainingCoins,

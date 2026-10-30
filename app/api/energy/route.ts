@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const energy = await syncEnergy(user.id);
     const profile = await prisma.profile.findUnique({
       where: { userId: user.id },
-      select: { gems: true },
+      select: { gems: true, coins: true },
     });
 
     return NextResponse.json({
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
       energyMax: energy.energyMax,
       msUntilNextRegen: energy.msUntilNextRegen,
       gems: profile?.gems ?? 0,
+      coins: profile?.coins ?? 0,
     });
   } catch (error) {
     if (error instanceof GameError) {

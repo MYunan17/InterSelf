@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SageSprite, IroncladSprite, PhantomSprite, MerchantSprite, type SpriteProps } from "@/lib/character-sprites";
 import type { ComponentType } from "react";
+import { AnimatedNumber } from "@/components/motion/animated-number";
+import { subscribeToTasksUpdate } from "@/lib/events";
 
 const SPRITES: Record<string, ComponentType<SpriteProps>> = {
   IRONCLAD: IroncladSprite, SAGE: SageSprite, PHANTOM: PhantomSprite, MERCHANT: MerchantSprite,
@@ -23,11 +25,12 @@ export function DashboardTopbar({
   gems: initialGems = 500,
   energy: initialEnergy = 5,
   energyMax = 5,
-  notifCount = 3,
+  notifCount = 0,
   characterClass,
 }: Props) {
   const router = useRouter();
   const Sprite = SPRITES[characterClass ?? "SAGE"] ?? SageSprite;
+  const [liveCoins, setLiveCoins] = useState(coins);
   const [gems, setGems] = useState(initialGems);
   const [energy, setEnergy] = useState(initialEnergy);
   const [msUntilRegen, setMsUntilRegen] = useState<number | null>(null);
@@ -41,16 +44,19 @@ export function DashboardTopbar({
       try {
         const res = await fetch("/api/energy", { cache: "no-store" });
         if (res.ok) {
-          const data = await res.json() as { energy: number; energyMax: number; gems: number; msUntilNextRegen: number | null };
+          const data = await res.json() as { energy: number; energyMax: number; gems: number; coins?: number; msUntilNextRegen: number | null };
           setEnergy(data.energy);
           setGems(data.gems);
+          if (typeof data.coins === "number") setLiveCoins(data.coins);
           setMsUntilRegen(data.msUntilNextRegen);
         }
       } catch { }
     };
     void fetchEnergy();
     const interval = setInterval(() => void fetchEnergy(), 60000);
-    return () => clearInterval(interval);
+    // Completing a quest or buying something changes coins/gems/energy: refresh right away.
+    const unsubscribe = subscribeToTasksUpdate(() => void fetchEnergy());
+    return () => { clearInterval(interval); unsubscribe(); };
   }, []);
 
   // Countdown to next energy regen
@@ -121,7 +127,7 @@ export function DashboardTopbar({
         <div style={pillStyle}>
           <span style={{ fontSize: 11, fontWeight: 900, color: "#f59e0b" }}>C</span>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{coins.toLocaleString()}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}><AnimatedNumber value={liveCoins} /></div>
             <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(255,255,255,0.38)" }}>Coins</div>
           </div>
         </div>
@@ -132,7 +138,7 @@ export function DashboardTopbar({
             <path d="M6 3h12l4 6-10 13L2 9z M2 9h20 M6 3l4 6 M18 3l-4 6"/>
           </svg>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#22d3ee" }}>{gems.toLocaleString()}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#22d3ee" }}><AnimatedNumber value={gems} /></div>
             <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(34,211,238,0.5)" }}>Gems</div>
           </div>
         </div>
@@ -145,7 +151,7 @@ export function DashboardTopbar({
           </svg>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: energy > 0 ? "#f59e0b" : "#ef4444" }}>
-              {energy}/{energyMax}
+              <AnimatedNumber value={energy} format={String} />/{energyMax}
             </div>
             <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(245,158,11,0.5)" }}>
               {regenLabel || "Energy"}
@@ -189,6 +195,7 @@ export function DashboardTopbar({
         </button>
         {accountMenuOpen && (
           <div
+            className="anim-slide-up"
             style={{
               position: "absolute",
               right: 0,

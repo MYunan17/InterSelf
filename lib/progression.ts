@@ -13,8 +13,9 @@ import { GEMS_REWARDS } from "@/lib/gems";
 import { grantRewards } from "@/lib/rewards";
 import { advanceStreak, STREAK_DEBUFF_MULTIPLIER } from "@/lib/streak";
 
-/** Multiplier applied to exp / coins while an XP Surge / Coin Magnet is active. */
-const ITEM_BOOST_MULTIPLIER = 1.5;
+/** Boosts while an XP Surge / Coin Magnet is active; they match the shop descriptions (+50% EXP, +100% coins). */
+const XP_SURGE_MULTIPLIER = 1.5;
+const COIN_MAGNET_MULTIPLIER = 2;
 
 export type TaskCompletionResult = {
   completion: Prisma.TaskCompletionGetPayload<{ include: { task: true } }>;
@@ -129,12 +130,12 @@ async function runTaskCompletion(
   const passiveLogs = [...passiveResult.passiveLogs];
 
   if (xpBoosted) {
-    expReward = Math.round(expReward * ITEM_BOOST_MULTIPLIER);
+    expReward = Math.round(expReward * XP_SURGE_MULTIPLIER);
     passiveLogs.push("XP Surge boosted EXP by 50%");
   }
   if (coinBoosted) {
-    coinReward = Math.round(coinReward * ITEM_BOOST_MULTIPLIER);
-    passiveLogs.push("Coin Magnet boosted coins by 50%");
+    coinReward = Math.round(coinReward * COIN_MAGNET_MULTIPLIER);
+    passiveLogs.push("Coin Magnet doubled coins");
   }
   if (streakOutcome.broke) {
     expReward = Math.round(expReward * STREAK_DEBUFF_MULTIPLIER);

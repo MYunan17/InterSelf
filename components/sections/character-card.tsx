@@ -65,7 +65,11 @@ export function CharacterCard({
       <div className="level-ribbon">LEVEL {level}</div>
 
       <div className="character-stage">
+        <div className="stage-aura" />
         <div className="rune-ring" />
+        {[14, 30, 50, 68, 84].map((left, index) => (
+          <i key={left} className="stage-spark" style={{ left: `${left}%`, animationDelay: `${index * 0.9}s` }} />
+        ))}
         <div className="sprite-wrap">
           <AnimatedClassSprite characterClass={charClass} className="hero-sprite" />
         </div>
@@ -158,6 +162,39 @@ export function CharacterCard({
           align-items: flex-end;
           justify-content: center;
           padding-top: 32px;
+        }
+
+        .stage-aura {
+          position: absolute;
+          bottom: 14px;
+          width: 230px;
+          height: 230px;
+          border-radius: 50%;
+          background: radial-gradient(circle, color-mix(in srgb, var(--class-glow) 40%, transparent), transparent 66%);
+          animation: stage-aura 4s ease-in-out infinite;
+        }
+
+        .stage-spark {
+          position: absolute;
+          bottom: 38px;
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: var(--class-accent);
+          box-shadow: 0 0 10px var(--class-accent);
+          opacity: 0;
+          animation: stage-rise 4.6s ease-in infinite;
+        }
+
+        @keyframes stage-aura { 50% { opacity: 0.55; transform: scale(1.08); } }
+        @keyframes stage-rise {
+          0% { transform: translateY(0) scale(1); opacity: 0; }
+          15% { opacity: 0.95; }
+          100% { transform: translateY(-170px) scale(0.3); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .stage-aura, .stage-spark { animation: none; }
         }
 
         .rune-ring {

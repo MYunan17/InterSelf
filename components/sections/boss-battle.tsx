@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BossArt } from "@/lib/boss-sprites";
 import { useToast } from "@/components/ui/toast";
 import { subscribeToBossDamage, subscribeToTasksUpdate } from "@/lib/events";
 import { fetchCachedJson, getCachedJson } from "@/lib/panel-data-cache";
@@ -365,54 +366,9 @@ export function BossBattlePanel({
             transform: `${bossShake ? "translateX(-6px) scale(0.95)" : "translateX(0) scale(1)"} ${defeated ? "scale(0.7)" : ""}`,
             transition: "transform 0.15s",
             filter: defeated ? "grayscale(1) opacity(0.4)" : enraged ? "drop-shadow(0 0 16px rgba(251,191,36,0.5))" : "drop-shadow(0 0 8px rgba(220,38,38,0.35))",
-            animation: defeated ? "none" : "bossFloat 3s ease-in-out infinite",
+            animation: "none",
           }}>
-            <svg viewBox="0 0 160 155" style={{ width: 200, height: 200 }} xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <radialGradient id="bossglow" cx="50%" cy="55%" r="50%">
-                  <stop offset="0%" stopColor={enraged ? "#dc2626" : "#7c0000"} stopOpacity="0.5"/>
-                  <stop offset="100%" stopColor="#080b12" stopOpacity="0"/>
-                </radialGradient>
-              </defs>
-              <ellipse cx="80" cy="148" rx="60" ry="9" fill="url(#bossglow)"/>
-              <path d="M30 88 Q20 120 24 148 Q80 142 136 148 Q140 120 130 88 Q112 72 80 70 Q48 72 30 88Z" fill="#1a0505"/>
-              <path d="M36 94 Q28 122 30 146 Q80 140 130 146 Q132 122 124 94" fill="#240808"/>
-              <rect x="60" y="100" width="40" height="40" rx="4" fill="#1a0505"/>
-              <path d="M64 104 L96 104 L96 138 L64 138Z" fill="#230d0d"/>
-              <path d="M78 104 L82 104 L82 138 L78 138Z" fill="#dc262615"/>
-              <path d="M64 116 L96 116 M64 128 L96 128" stroke="#dc2626" strokeWidth="0.6" opacity=".3"/>
-              <path d="M30 91 Q14 102 16 118 Q21 115 26 107 Q29 98 34 93Z" fill="#1a0505"/>
-              <path d="M130 91 Q146 102 144 118 Q139 115 134 107 Q131 98 126 93Z" fill="#1a0505"/>
-              <path d="M15 119 L9 113 M15 119 L11 126 M15 119 L19 125 M15 119 L21 113" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" opacity=".85"/>
-              <path d="M145 119 L151 113 M145 119 L149 126 M145 119 L141 125 M145 119 L139 113" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" opacity=".85"/>
-              <path d="M30 90 Q10 74 6 50 Q24 56 34 74 Q30 84 34 92Z" fill="#1a0505" opacity=".9"/>
-              <path d="M130 90 Q150 74 154 50 Q136 56 126 74 Q130 84 126 92Z" fill="#1a0505" opacity=".9"/>
-              <path d="M8 54 Q16 46 14 36" stroke="#dc2626" strokeWidth="1.2" opacity=".3" fill="none"/>
-              <path d="M152 54 Q144 46 146 36" stroke="#dc2626" strokeWidth="1.2" opacity=".3" fill="none"/>
-              <rect x="68" y="58" width="24" height="14" rx="5" fill="#1a0505"/>
-              <ellipse cx="80" cy="40" rx="34" ry="36" fill="#0d0202"/>
-              <rect x="48" y="16" width="64" height="48" rx="9" fill="#1a0505"/>
-              <rect x="52" y="20" width="56" height="40" rx="6" fill="#2d1010"/>
-              <rect x="58" y="28" width="44" height="24" rx="4" fill="#0d0404"/>
-              <ellipse cx="70" cy="38" rx="8" ry="7" fill={enraged ? "#fbbf24" : "#dc2626"} opacity=".95"/>
-              <ellipse cx="90" cy="38" rx="8" ry="7" fill={enraged ? "#fbbf24" : "#dc2626"} opacity=".95"/>
-              <ellipse cx="70" cy="38" rx="4" ry="3.5" fill={enraged ? "#fef3c7" : "#fca5a5"}/>
-              <ellipse cx="90" cy="38" rx="4" ry="3.5" fill={enraged ? "#fef3c7" : "#fca5a5"}/>
-              <ellipse cx="71" cy="38" rx="2" ry="2.5" fill="#1a0505"/>
-              <ellipse cx="91" cy="38" rx="2" ry="2.5" fill="#1a0505"/>
-              <ellipse cx="70" cy="38" rx="11" ry="10" fill={enraged ? "#fbbf24" : "#dc2626"} opacity=".15"/>
-              <ellipse cx="90" cy="38" rx="11" ry="10" fill={enraged ? "#fbbf24" : "#dc2626"} opacity=".15"/>
-              <path d="M62 56 Q67 62 74 59 L80 63 L86 59 Q93 62 98 56" fill="#0d0404" stroke="#dc2626" strokeWidth="1.5" opacity=".75"/>
-              <path d="M66 57 L68 62 M80 60 L80 65 M94 57 L92 62" stroke="#fca5a5" strokeWidth="1.2" strokeLinecap="round" opacity=".5"/>
-              <path d="M50 16 L40 -2 L52 12Z" fill="#1a0505"/>
-              <path d="M110 16 L120 -2 L108 12Z" fill="#1a0505"/>
-              <path d="M58 12 L50 -2 L60 8Z" fill="#220808"/>
-              <path d="M102 12 L110 -2 L100 8Z" fill="#220808"/>
-              <circle cx="22" cy="70" r="2" fill="#dc2626" opacity=".4"/>
-              <circle cx="138" cy="70" r="2" fill="#dc2626" opacity=".35"/>
-              <circle cx="56" cy="10" r="1.5" fill="#dc2626" opacity=".3"/>
-              <circle cx="104" cy="8" r="1.5" fill="#dc2626" opacity=".35"/>
-            </svg>
+            <BossArt name={boss?.name} size={230} isHit={hitFlash} enraged={enraged} defeated={defeated} />
           </div>
 
           {/* Narration text */}

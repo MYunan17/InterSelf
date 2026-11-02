@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import Link from "next/link";
 import {
   AnimatePresence,
@@ -11,8 +11,9 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { Flame, Play, Shield, Star, Swords, Zap } from "lucide-react";
+import { Flame, Star, Swords, Zap } from "lucide-react";
 import { CountUp } from "@/components/motion/count-up";
+import { BossArt } from "@/lib/boss-sprites";
 
 const STATS = [
   { icon: Star, to: 12, suffix: "K+", label: "Adventurer" },
@@ -34,9 +35,8 @@ const STARS = Array.from({ length: 36 }, (_, index) => ({
 const TITLE_LINE_ONE = ["Hidupmu", "adalah"];
 const TITLE_LINE_TWO = ["dungeon", "terkuat", "yang", "pernah", "ada."];
 
-// Damage dealt to the showcase boss, in order. The boss respawns after the last hit.
+// The showcase boss: it fights itself until you click, then you take over. It respawns after a kill.
 const BOSS_MAX_HP = 10000;
-const HITS = [1500, 2100, 900, 2600, 1700, 1200];
 
 const container = {
   hidden: {},
@@ -47,11 +47,22 @@ const word = {
   show: { y: "0%", rotate: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
+/** Arrow keys move between the menu entries, like a console title screen. */
+function moveMenuFocus(event: KeyboardEvent<HTMLElement>) {
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  const items = Array.from(event.currentTarget.querySelectorAll<HTMLAnchorElement>("a"));
+  const at = items.indexOf(document.activeElement as HTMLAnchorElement);
+  if (at < 0) return;
+  event.preventDefault();
+  const next = event.key === "ArrowDown" ? (at + 1) % items.length : (at - 1 + items.length) % items.length;
+  items[next]?.focus();
+}
+
 export function LandingHero() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="landing-hero">
+    <section className="landing-hero" id="zone-hero">
       <HeroBackdrop />
 
       <div className="hero-layout">
@@ -112,19 +123,30 @@ export function LandingHero() {
             quest lagi.
           </motion.p>
 
-          <motion.div
-            className="hero-actions"
+          <motion.nav
+            className="game-menu"
+            aria-label="Menu utama"
+            onKeyDown={moveMenuFocus}
             initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.1 }}
           >
-            <Link href="/register" className="gold-cta">
-              Pilih Kelasmu <span aria-hidden>{"->"}</span>
+            <Link href="/register" className="menu-item menu-item--primary">
+              <span className="menu-cursor" aria-hidden>▶</span>
+              New Game
+              <small>Pilih kelasmu</small>
             </Link>
-            <Link href="/login" className="violet-cta">
-              <Play aria-hidden /> Coba Demo
+            <Link href="/login" className="menu-item">
+              <span className="menu-cursor" aria-hidden>▶</span>
+              Demo Mode
+              <small>Coba tanpa daftar</small>
             </Link>
-          </motion.div>
+            <Link href="/login" className="menu-item">
+              <span className="menu-cursor" aria-hidden>▶</span>
+              Continue
+              <small>Sudah punya akun</small>
+            </Link>
+          </motion.nav>
 
           <div className="hero-stats">
             {STATS.map(({ icon: Icon, to, suffix, label }, index) => (
@@ -543,18 +565,15 @@ export function LandingHero() {
 
         .boss-mark {
           display: grid;
-          width: 52px;
-          height: 52px;
+          width: 72px;
+          height: 72px;
           flex: none;
           place-items: center;
           border: 1px solid rgba(244, 114, 182, 0.55);
           border-radius: 14px;
-          background: rgba(244, 114, 182, 0.12);
-          color: #f9a8d4;
+          background: rgba(244, 114, 182, 0.1);
           box-shadow: 0 0 22px rgba(244, 114, 182, 0.28);
         }
-
-        .boss-mark svg { width: 26px; height: 26px; }
         .boss-info { min-width: 0; flex: 1; }
         .boss-info p { margin: 0; color: #fff; font-size: 15px; font-weight: 800; }
         .boss-info span { color: rgba(226, 232, 240, 0.6); font-family: var(--font-mono); font-size: 12px; }
@@ -610,7 +629,101 @@ export function LandingHero() {
           animation: rise 5s ease-in infinite;
         }
 
+        /* ---------- title-screen menu ---------- */
+        .game-menu { display: grid; gap: 8px; max-width: 440px; margin-top: 28px; }
+
+        .menu-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border: 1px solid rgba(139, 92, 246, 0.45);
+          border-radius: 10px;
+          background: rgba(10, 10, 30, 0.7);
+          padding: 13px 16px;
+          color: #e9d5ff;
+          font-family: var(--font-mono);
+          font-size: 14px;
+          font-weight: 900;
+          letter-spacing: 0.16em;
+          text-decoration: none;
+          text-transform: uppercase;
+          transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, color 0.22s ease;
+        }
+
+        .menu-item small {
+          margin-left: auto;
+          color: rgba(203, 213, 225, 0.55);
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          text-transform: none;
+        }
+
+        .menu-cursor { width: 14px; color: #facc15; opacity: 0; transform: translateX(-8px); transition: opacity 0.2s ease, transform 0.2s ease; }
+
+        .menu-item:hover,
+        .menu-item:focus-visible {
+          border-color: #facc15;
+          background: rgba(250, 204, 21, 0.1);
+          color: #fff;
+          transform: translateX(8px);
+          outline: none;
+        }
+
+        .menu-item:hover .menu-cursor,
+        .menu-item:focus-visible .menu-cursor,
+        .menu-item--primary .menu-cursor { opacity: 1; transform: none; }
+
+        .menu-item--primary {
+          border-color: rgba(250, 204, 21, 0.85);
+          background: linear-gradient(90deg, rgba(250, 204, 21, 0.2), rgba(10, 10, 30, 0.7));
+          color: #fff7d1;
+          animation: menu-glow 2.6s ease-in-out infinite;
+        }
+
+        .menu-item--primary .menu-cursor { animation: caret 1s steps(1) infinite; }
+
+        /* ---------- strike button ---------- */
+        .strike-row { position: relative; z-index: 2; display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+
+        .strike-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid rgba(255, 226, 122, 0.9);
+          border-radius: 10px;
+          background: linear-gradient(180deg, #ffe178, #d99b1d);
+          padding: 11px 22px;
+          color: #1d1302;
+          font-family: var(--font-mono);
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0.14em;
+          cursor: pointer;
+          box-shadow: 0 0 22px rgba(250, 204, 21, 0.4);
+        }
+
+        .strike-btn:disabled { cursor: default; filter: grayscale(0.6); box-shadow: none; }
+        .strike-btn svg { width: 16px; height: 16px; }
+
+        .strike-hint { margin: 0; color: rgba(203, 213, 225, 0.5); font-size: 11px; }
+
+        .combo-badge {
+          border: 1px solid rgba(251, 113, 133, 0.7);
+          border-radius: 8px;
+          background: rgba(251, 113, 133, 0.14);
+          padding: 6px 12px;
+          color: #fda4af;
+          font-family: var(--font-mono);
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0.1em;
+          text-shadow: 0 0 14px rgba(251, 113, 133, 0.8);
+        }
+
         /* ---------- keyframes ---------- */
+        @keyframes menu-glow { 50% { box-shadow: 0 0 26px rgba(250, 204, 21, 0.28); } }
         @keyframes gold-shimmer { to { background-position: -220% 0; } }
         @keyframes caret { 50% { opacity: 0; } }
         @keyframes eyebrow-pulse { 50% { width: 34px; } }
@@ -712,6 +825,8 @@ function HeroBackdrop() {
   );
 }
 
+type StrikeInfo = { id: number; dmg: number; crit: boolean };
+
 function HudShowcase() {
   const reduce = useReducedMotion();
 
@@ -733,22 +848,81 @@ function HudShowcase() {
     pointerY.set(0);
   }
 
-  // Looping boss fight: one hit per tick, then a victory banner, then respawn.
-  const [step, setStep] = useState(0);
+  // The fight. Logic lives in refs so quick clicks never read stale state; state is only for display.
+  const [hp, setHp] = useState(BOSS_MAX_HP);
+  const [exp, setExp] = useState(40);
+  const [level, setLevel] = useState(24);
+  const [combo, setCombo] = useState(0);
+  const [lastStrike, setLastStrike] = useState<StrikeInfo | null>(null);
+  const [defeated, setDefeated] = useState(false);
+  const [shakes, setShakes] = useState(0);
 
+  const hpRef = useRef(BOSS_MAX_HP);
+  const expRef = useRef(40);
+  const levelRef = useRef(24);
+  const comboRef = useRef(0);
+  const defeatedRef = useRef(false);
+  const lastStrikeAt = useRef(0);
+  const lastManualAt = useRef(0);
+  const strikeId = useRef(0);
+  const respawnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const strike = useCallback((manual: boolean) => {
+    if (defeatedRef.current) return;
+    const now = Date.now();
+    if (manual) lastManualAt.current = now;
+
+    comboRef.current = now - lastStrikeAt.current < 1600 ? comboRef.current + 1 : 1;
+    lastStrikeAt.current = now;
+
+    const crit = Math.random() < 0.2 + Math.min(0.3, comboRef.current * 0.04);
+    const base = 500 + Math.random() * 800 + comboRef.current * 60;
+    const dmg = Math.round(base * (crit ? 1.8 : 1));
+
+    hpRef.current = Math.max(0, hpRef.current - dmg);
+    expRef.current += 8;
+    if (expRef.current >= 100) {
+      expRef.current -= 100;
+      levelRef.current += 1;
+    }
+
+    strikeId.current += 1;
+    setHp(hpRef.current);
+    setExp(expRef.current);
+    setLevel(levelRef.current);
+    setCombo(comboRef.current);
+    setLastStrike({ id: strikeId.current, dmg, crit });
+    setShakes((value) => value + 1);
+
+    if (hpRef.current === 0) {
+      defeatedRef.current = true;
+      setDefeated(true);
+      respawnTimer.current = setTimeout(() => {
+        hpRef.current = BOSS_MAX_HP;
+        comboRef.current = 0;
+        defeatedRef.current = false;
+        setHp(BOSS_MAX_HP);
+        setCombo(0);
+        setLastStrike(null);
+        setDefeated(false);
+      }, 2600);
+    }
+  }, []);
+
+  // Left alone, the boss keeps getting hit so the card never looks dead; clicking takes over.
   useEffect(() => {
     if (reduce) return;
-    const timer = setInterval(() => setStep((value) => (value >= HITS.length ? 0 : value + 1)), 2000);
-    return () => clearInterval(timer);
-  }, [reduce]);
+    const timer = setInterval(() => {
+      if (Date.now() - lastManualAt.current > 6000) strike(false);
+    }, 2200);
+    return () => {
+      clearInterval(timer);
+      if (respawnTimer.current) clearTimeout(respawnTimer.current);
+    };
+  }, [reduce, strike]);
 
-  const dealt = HITS.slice(0, step).reduce((sum, hit) => sum + hit, 0);
-  const hp = Math.max(0, BOSS_MAX_HP - dealt);
-  const defeated = step >= HITS.length;
-  const lastHit = step > 0 ? HITS[step - 1] : 0;
-  const isCrit = lastHit >= 2000;
-  const exp = Math.min(100, 40 + step * 10);
-  const focus = Math.max(30, 82 - step * 6);
+  const focus = Math.max(35, 88 - combo * 5);
+  const hit = lastStrike !== null && !defeated;
 
   return (
     <motion.div
@@ -779,7 +953,9 @@ function HudShowcase() {
             <div className="hud-top">
               <div>
                 <span>Level</span>
-                <strong>{24 + (defeated ? 1 : 0)}</strong>
+                <motion.strong key={level} initial={reduce ? false : { scale: 1.35 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 380, damping: 14 }}>
+                  {level}
+                </motion.strong>
               </div>
               <div className="hud-streak">
                 <span>Streak</span>
@@ -797,30 +973,30 @@ function HudShowcase() {
 
             <div className="boss-card">
               <AnimatePresence>
-                {step > 0 && !defeated && (
+                {hit && lastStrike && (
                   <motion.div
-                    key={step}
-                    className={`damage-pop${isCrit ? " crit" : ""}`}
+                    key={lastStrike.id}
+                    className={`damage-pop${lastStrike.crit ? " crit" : ""}`}
                     initial={{ opacity: 0, y: 8, scale: 0.7 }}
-                    animate={{ opacity: [0, 1, 1, 0], y: -34, scale: isCrit ? 1.25 : 1 }}
-                    transition={{ duration: 1.5, times: [0, 0.15, 0.7, 1] }}
+                    animate={{ opacity: [0, 1, 1, 0], y: -34, scale: lastStrike.crit ? 1.25 : 1 }}
+                    transition={{ duration: 1.3, times: [0, 0.15, 0.7, 1] }}
                   >
-                    {isCrit ? "CRIT " : ""}-{lastHit.toLocaleString("id")}
+                    {lastStrike.crit ? "CRIT " : ""}-{lastStrike.dmg.toLocaleString("id")}
                   </motion.div>
                 )}
               </AnimatePresence>
 
               <div className="boss-row">
                 <motion.div
-                  key={`mark-${step}`}
+                  key={`mark-${shakes}`}
                   className="boss-mark"
-                  animate={step > 0 && !defeated && !reduce ? { x: [0, -7, 7, -4, 0] } : { x: 0 }}
+                  animate={hit && !reduce ? { x: [0, -7, 7, -4, 0] } : { x: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Shield aria-hidden />
+                  <BossArt name="Prokrastinasi Abyssal" size={72} isHit={hit && (lastStrike?.crit ?? false)} defeated={defeated} />
                 </motion.div>
                 <div className="boss-info">
-                  <p>Prokrastinator Agung</p>
+                  <p>Prokrastinasi Abyssal</p>
                   <span>
                     {hp.toLocaleString("id")} / {BOSS_MAX_HP.toLocaleString("id")} HP
                   </span>
@@ -830,6 +1006,35 @@ function HudShowcase() {
               <div className="boss-hp">
                 <div style={{ width: `${(hp / BOSS_MAX_HP) * 100}%` }} />
               </div>
+            </div>
+
+            <div className="strike-row">
+              <motion.button
+                type="button"
+                className="strike-btn"
+                disabled={defeated}
+                whileHover={reduce ? undefined : { scale: 1.04 }}
+                whileTap={reduce ? undefined : { scale: 0.93 }}
+                onClick={() => strike(true)}
+              >
+                <Swords aria-hidden /> {defeated ? "BOSS KALAH!" : "SERANG!"}
+              </motion.button>
+              <AnimatePresence mode="wait">
+                {combo >= 2 && !defeated ? (
+                  <motion.div
+                    key={combo}
+                    className="combo-badge"
+                    initial={{ scale: 1.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 16 }}
+                  >
+                    COMBO ×{combo}
+                  </motion.div>
+                ) : (
+                  <p className="strike-hint">Klik untuk menyerang bosnya</p>
+                )}
+              </AnimatePresence>
             </div>
 
             <AnimatePresence>
@@ -847,7 +1052,7 @@ function HudShowcase() {
                     transition={{ type: "spring", stiffness: 260, damping: 16 }}
                   >
                     <strong>BOSS DEFEATED</strong>
-                    <span>+500 EXP · +250 COINS · LEVEL UP</span>
+                    <span>+500 EXP · +250 COINS</span>
                   </motion.div>
                 </motion.div>
               )}

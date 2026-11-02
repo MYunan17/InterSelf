@@ -40,7 +40,7 @@ export function LandingPreview() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="landing-preview">
+    <section className="landing-preview" id="zone-loop">
       <Reveal>
         <div className="loop-heading">
           <div className="loop-eyebrow">
@@ -96,17 +96,17 @@ export function LandingPreview() {
       </div>
 
       <Reveal y={40} scale={0.97}>
-        <div className="final-cta">
+        <div className="final-cta" id="zone-final">
           <div className="cta-sigil left" />
           <div className="cta-sigil right" />
-          <p>Siap Memulai?</p>
+          <p>Insert coin to continue</p>
           <h2>
             Mulai sekarang. <strong>Gratis.</strong>
           </h2>
           <span>Tidak perlu kartu kredit. Pilih kelas karakter dan bangun sistem hidupmu sendiri.</span>
           <div className="cta-actions">
             <Link href="/register" className="cta-main">
-              Pilih Kelasmu <em aria-hidden>{"->"}</em>
+              <span className="press-start" aria-hidden>▶</span> Press Start
             </Link>
             <Link href="/login" className="cta-demo">
               <Play aria-hidden /> Coba Demo
@@ -332,9 +332,10 @@ export function LandingPreview() {
           animation: cta-pulse 2.6s ease-in-out infinite;
         }
 
-        .cta-main em { display: inline-block; font-style: normal; transition: transform 0.25s ease; }
+        .cta-main { font-family: var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; }
+        .press-start { display: inline-block; animation: press-blink 1s steps(1) infinite; }
         .cta-main:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 40px rgba(250, 204, 21, 0.55); }
-        .cta-main:hover em { transform: translateX(6px); }
+        @keyframes press-blink { 50% { opacity: 0; } }
 
         .cta-demo {
           border: 1px solid rgba(139, 92, 246, 0.8);

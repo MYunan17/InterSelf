@@ -1,14 +1,18 @@
 import { LandingHero } from "@/components/sections/landing-hero";
 import { LandingFeatures } from "@/components/sections/landing-features";
 import { LandingPreview } from "@/components/sections/landing-preview";
-import { ScrollProgress } from "@/components/motion/scroll-progress";
+import { LandingClasses } from "@/components/sections/landing-classes";
+import { LandingQuests } from "@/components/sections/landing-quests";
+import { LandingGameHud } from "@/components/sections/landing-game-hud";
 
 export default function Home() {
   return (
     <main className="interself-landing">
-      <ScrollProgress />
+      <LandingGameHud />
       <div className="landing-shell">
         <LandingHero />
+        <LandingClasses />
+        <LandingQuests />
         <LandingFeatures />
         <LandingPreview />
       </div>

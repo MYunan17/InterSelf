@@ -10,6 +10,7 @@ type Feature = {
   title: string;
   desc: string;
   tag: string;
+  rarity: "RARE" | "EPIC" | "LEGENDARY";
   tone: "gold" | "violet" | "rose" | "teal";
 };
 
@@ -19,6 +20,7 @@ const FEATURES: Feature[] = [
     title: "Boss yang Menantikan",
     desc: "Penundaan berubah menjadi musuh aktif. Semakin lama kamu diam, semakin tebal HP yang harus ditembus.",
     tag: "Combat",
+    rarity: "LEGENDARY",
     tone: "gold",
   },
   {
@@ -26,6 +28,7 @@ const FEATURES: Feature[] = [
     title: "Identitas yang Nyata",
     desc: "Pilih class, bangun reputasi, dan lihat karaktermu berkembang sesuai ritme hidupmu sendiri.",
     tag: "Identity",
+    rarity: "EPIC",
     tone: "violet",
   },
   {
@@ -33,6 +36,7 @@ const FEATURES: Feature[] = [
     title: "Streak Punya Jiwa",
     desc: "Streak bukan dekorasi angka. Ia jadi tekanan, perlindungan, dan bukti bahwa kamu terus hadir.",
     tag: "Retention",
+    rarity: "EPIC",
     tone: "rose",
   },
   {
@@ -40,6 +44,7 @@ const FEATURES: Feature[] = [
     title: "Daily Chest",
     desc: "Reward harian membuat rutinitas terasa punya konsekuensi: simpan, pakai, dan upgrade progresmu.",
     tag: "Daily Loop",
+    rarity: "RARE",
     tone: "teal",
   },
   {
@@ -47,6 +52,7 @@ const FEATURES: Feature[] = [
     title: "Combo Multiplier",
     desc: "Aksi yang konsisten terasa makin kuat. Momentum kecil berubah menjadi damage besar.",
     tag: "Feedback",
+    rarity: "RARE",
     tone: "gold",
   },
   {
@@ -54,6 +60,7 @@ const FEATURES: Feature[] = [
     title: "PvP & Guild",
     desc: "Bersaing sehat, bangun aliansi, dan jadikan progres personal terasa hidup bersama pemain lain.",
     tag: "Social",
+    rarity: "LEGENDARY",
     tone: "rose",
   },
 ];
@@ -69,11 +76,11 @@ export function LandingFeatures() {
   }
 
   return (
-    <section className="landing-features">
+    <section className="landing-features" id="zone-features">
       <Reveal>
         <div className="section-divider">
           <span />
-          <p>System Online</p>
+          <p>Armory</p>
           <span />
         </div>
       </Reveal>
@@ -88,7 +95,7 @@ export function LandingFeatures() {
       </Reveal>
 
       <div className="features-grid">
-        {FEATURES.map(({ icon: Icon, title, desc, tag, tone }, index) => (
+        {FEATURES.map(({ icon: Icon, title, desc, tag, rarity, tone }, index) => (
           <motion.article
             key={title}
             className={`feature-card ${tone}`}
@@ -99,6 +106,7 @@ export function LandingFeatures() {
             transition={{ duration: 0.6, delay: (index % 3) * 0.12, ease: [0.22, 1, 0.36, 1] }}
             whileHover={reduce ? undefined : { y: -8 }}
           >
+            <em className={`feature-rarity ${rarity.toLowerCase()}`}>{rarity}</em>
             <div className="feature-icon">
               <Icon aria-hidden />
             </div>
@@ -262,6 +270,30 @@ export function LandingFeatures() {
           text-transform: uppercase;
         }
 
+        .feature-rarity {
+          position: absolute;
+          right: 14px;
+          top: 14px;
+          border-radius: 4px;
+          padding: 2px 7px;
+          font-family: var(--font-mono);
+          font-size: 9px;
+          font-style: normal;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+        }
+
+        .feature-rarity.rare { background: rgba(96, 165, 250, 0.16); color: #93c5fd; border: 1px solid rgba(96, 165, 250, 0.5); }
+        .feature-rarity.epic { background: rgba(192, 132, 252, 0.16); color: #d8b4fe; border: 1px solid rgba(192, 132, 252, 0.55); }
+        .feature-rarity.legendary {
+          background: linear-gradient(100deg, rgba(250, 204, 21, 0.2), rgba(255, 244, 179, 0.4), rgba(250, 204, 21, 0.2));
+          background-size: 220% 100%;
+          color: #fde68a;
+          border: 1px solid rgba(250, 204, 21, 0.7);
+          animation: legendary-sheen 3s linear infinite;
+        }
+
+        @keyframes legendary-sheen { to { background-position: -220% 0; } }
         @keyframes blink { 50% { opacity: 0.25; } }
         @keyframes flow { to { background-position: -250% 0; } }
 
